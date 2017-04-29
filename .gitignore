@@ -1,0 +1,12 @@
+dist
+node_modules
+npm-debug.log
+.DS_Store
+.thumbs
+.Thumbs
+.zip
+.rar
+._*
+.skf
+.skb
+*~

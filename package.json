@@ -1,0 +1,50 @@
+{
+  "name": "Skrifa-Lite",
+  "productName": "Skrifa Lite",
+  "version": "0.1.0",
+  "description": "A simple word processor built with web technologies",
+  "devDependencies": {
+    "electron": "^1.6.2",
+    "electron-builder": "^16.7.1"
+  },
+  "scripts": {
+    "pack": "build --dir",
+    "dist": "build -mwl",
+    "postinstall": "install-app-deps",
+    "start": "electron ./app --enable-logging",
+    "dev": "NODE_ENV='development' npm run start",
+    "mac": "build --m",
+    "linux": "build --l"
+  },
+  "author": "Diego Islas Ocampo <hyuchia@gmail.com>",
+  "license": "GPL-3.0",
+  "build": {
+    "appId": "com.hyuchia.skrifa-lite",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "zip"
+      ]
+    },
+    "linux": {
+      "category": "Office",
+      "target": [
+        "snap",
+        "AppImage",
+        "deb",
+        "rpm",
+        "freebsd",
+        "pacman"
+      ],
+      "executableName": "Skrifa-Lite",
+      "synopsis": "A simple word processor built with web technologies"
+    },
+    "appx": {
+      "backgroundColor": "",
+      "publisher": "",
+      "displayName": "Skrifa Lite",
+      "publisherDisplayName": "Hyuchia",
+      "identityName": ""
+    }
+  }
+}
