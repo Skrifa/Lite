@@ -4,12 +4,13 @@ $_ready(() => {
 	$_("[data-form='new-notebook']").submit(function(event){
 		event.preventDefault();
 		var self = this;
+
 		// Get the name and description values from the form
 		var name = $_("[data-form='new-notebook'] input[data-input='name']").value().trim();
 		var description = $_("[data-form='new-notebook'] input[data-input='description']").value().trim();
 
 		// Check if name was not empty
-		if(name != ""){
+		if (name != "") {
 
 			// Insert the new notebook
 			db.notebook.add({
@@ -18,7 +19,7 @@ $_ready(() => {
 			}).then(function(){
 				self.reset();
 				// Load notebooks list again
-				loadNotebooks().then(function(){
+				loadNotebooks().then(function() {
 					show("notes");
 				});
 			});

@@ -1,6 +1,6 @@
-$_ready(function(){
+$_ready(() => {
 
-	$("body").on("click", "[data-action]",function(){
+	$("[data-view='notes']").on("click", "[data-action]",function(){
 		switch ($_(this).data("action")) {
 
 			case "settings":
@@ -31,8 +31,8 @@ $_ready(function(){
 				break;
 
 			case "new-note":
-
 				var date = new Date().toLocaleString();
+
 				var color = colors[Math.floor(Math.random()*colors.length)];
 				db.note.add({
 					Title: "New Note",
@@ -64,7 +64,6 @@ $_ready(function(){
 
 			// Shows the edit screen of a note.
 			case "edit":
-
 				if(id == null){
 					id = $_(this).data("id");
 				}
@@ -80,7 +79,6 @@ $_ready(function(){
 					$_("[data-form='unsaved'] input").value('preview');
 					$_("[data-modal='unsaved']").addClass('active');
 				}else{
-
 
 					if(id == null){
 						id = $_(this).data("id");
@@ -103,23 +101,23 @@ $_ready(function(){
 						})();
 
 						MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-						show("preview")
+						show("preview");
 					});
 				}
 				break;
 
 			case "import-note":
+				wait("Importing New Note");
 				dialog.showOpenDialog({
 					title: "Import a Note",
 					buttonLabel: "Import",
 					filters: [
-					    {name: 'Custom File Type', extensions: ['skrifa', 'md', 'txt', 'html', 'docx']},
+					    {name: 'Custom File Type', extensions: ['skrifa', 'md', 'txt', 'docx']},
 					],
 					properties: ['openFile']
 				},
 				function(file){
 					if(file){
-
 						fs.readFile(file[0], 'utf8', function (error, data) {
 							if(error){
 								dialog.showErrorBox("Error reading file", "There was an error reading the file, note was not imported.");
@@ -187,9 +185,8 @@ $_ready(function(){
 										var json = JSON.parse(data);
 										if(json.Title && json.Content && json.CDate && json.MDate && json.Color){
 
-
 											var date = new Date().toLocaleString();
-											json.Content = json.Content.replace(/<img class="lazy" src=/g, "<img data-original=").replace(/data-url/g, "src");
+
 											db.note.add({
 												Title: json.Title,
 												Content: json.Content,
@@ -209,7 +206,6 @@ $_ready(function(){
 									case "txt":
 										var date = new Date().toLocaleString();
 
-
 										var regex = /.*\n/g;
 										var html = "";
 
@@ -224,6 +220,7 @@ $_ready(function(){
 												html += `<p>${match}</p>`
 										    });
 										}
+
 										var color = colors[Math.floor(Math.random()*colors.length)];
 										db.note.add({
 											Title: "Imported Note",
@@ -245,7 +242,6 @@ $_ready(function(){
 										var h1 = $(html).filter("h1").text().trim();
 										h1 = h1 != "" ? h1: 'Imported Note';
 										if(h1 && html && date){
-
 											var color = colors[Math.floor(Math.random()*colors.length)];
 											db.note.add({
 												Title: h1,
@@ -267,30 +263,33 @@ $_ready(function(){
 
 							}
 						});
+					} else {
+						show("notes");
 					}
 				});
 				break;
 		}
 	});
 
-	// Inserts the code element with the given language.
+	// Click handler for the sidenav notebook buttons
 	$_("[data-content='notebook-list']").on("click", "[data-notebook]", function(){
 		if(notebook != $_(this).data("notebook") + ""){
 			notebook = $_(this).data("notebook") + "";
 
 			$_(".logo h1").text($_(this).text());
 
-			if(notebook != "Inbox"){
+			if (notebook != "Inbox") {
 				db.notebook.where("id").equals(parseInt(notebook)).first(function(item, cursor){
 					$_(".logo small").text(item.Description);
 					$_("[data-action='edit-notebook']").style({display: "inline-block"});
 					$_("[data-action='delete-notebook']").style({display: "inline-block"});
 				});
-			}else{
+			} else {
 				$_(".logo small").text("A place for any note");
 				$_("[data-action='edit-notebook']").hide();
 				$_("[data-action='delete-notebook']").hide();
 			}
+			$("[data-view='notes'] .side-nav").removeClass("active");
 			loadNotes();
 		}
 	});
@@ -319,19 +318,20 @@ $_ready(function(){
 		dragTarget = event.target.dataset.notebook;
 		$_(this).removeClass("drag-hover");
 
-		db.transaction('rw', db.note, function() {
-			db.note.where("id").equals(parseInt(dragging)).modify({Notebook: dragTarget});
-			$_("[data-nid='" + dragging + "']").remove();
-			dragging = null;
-			dragTarget = null;
-		});
-
+		// Check if the note is not being moved to the same notebook
+		if (dragTarget != notebook) {
+			db.transaction('rw', db.note, function() {
+				db.note.where("id").equals(parseInt(dragging)).modify({Notebook: dragTarget});
+				$_("[data-nid='" + dragging + "']").remove();
+				dragging = null;
+				dragTarget = null;
+			});
+		}
 	});
 
 	$_("[data-form='delete-note']").submit(function(event){
 		event.preventDefault();
 		db.note.where("id").equals(parseInt(deltempid)).delete().then(function(){
-
 			$_("[data-nid='" + deltempid + "']").remove();
 			$_("[data-modal='delete-note']").removeClass("active");
 			deltempid = null;

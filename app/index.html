@@ -42,7 +42,6 @@
 		<script src="js/editor.js"></script>
 		<script src="js/preview.js"></script>
 		<script src="js/export-note.js"></script>
-		<script src="js/share.js"></script>
 	</head>
 	<body class="light">
 
@@ -280,8 +279,9 @@
 			<div class="middle padded-2">
 				<h1>Export Note As:</h1>
 				<form method="post" data-form="export-note" class="align-center padded-2">
-					<p>Remember that only the Skrifa Note format will remain encrypted, by exporting your note to any other format your content can be viewed by anyone. Select the format you want to export your note in.</p>
-					<button data-action="export-skrifa">Lite/Chrome Skrifa Note</button>
+					<p>Select the format you want to export your note in.</p>
+					<button data-action="export-skf">Skrifa Note</button>
+					<button data-action="export-skrifa">Chrome Skrifa Note</button>
 					<button data-action="export-md">Markdown</button>
 					<button data-action="export-html">HTML</button>
 					<button data-action="export-pdf">PDF</button>
@@ -310,10 +310,6 @@
 			</nav>
 
 			<div class="wrapper">
-				<div class="middle align-center" data-content="welcome">
-					<h2>Add some notes</h2>
-					<p>Your notebook is empty, press the plus (+) button on the top bar to create a note.</p>
-				</div>
 				<nav class="top-nav">
 					<div class="logo align-center padded-1">
 						<h1>Inbox</h1>
@@ -323,15 +319,17 @@
 						<li data-action="new-note" class="vertical"><span class="fa fa-plus"></span><small>New Note</small></li>
 						<li data-action="import-note" class="vertical"><span class="fa fa-upload"></span><small>Import Note</small></li>
 						<li data-action="new-notebook" class="vertical"><span class="fa fa-book"></span><small>New Notebook</small></li>
-						<!--<li class="fa fa-th" data-action="change-view"></li>-->
 						<li data-action="edit-notebook" class="vertical"><span class="fa fa-pencil"></span><small>Edit Notebook</small></li>
 						<li data-action="delete-notebook" class="vertical"><span class="fa fa-trash"></span><small>Delete Notebook</small></li>
 						<li data-action="settings" class="vertical"><span class="fa fa-cog"></span><small>Settings</small></li>
 						<li data-action="update" class="vertical"><span class="fa fa-cloud-download"></span><small>New Version Available</small></li>
-				        <!--<li class="fa fa-question-circle" data-show="help"></li>
-				        <li class="fa fa-sign-out" data-action="logout"></li>-->
 				    </ul>
 				</nav>
+				<div class="align-center" data-content="welcome">
+					<h2>Add some notes</h2>
+					<p>Your notebook is empty, press the plus (+) button on the top bar to create a note.</p>
+				</div>
+
 
 				<div data-content="note-container" class="grid">
 
@@ -344,8 +342,7 @@
 			<div data-modal="clear-data">
 				<form data-form="clear-data" class="vertical align-center padded-1">
 					<h2>Clear Data</h2>
-					<p>Please enter your passphrase to continue. Remember this action is definitive, use with precaution!</p>
-					<input type="password" name="passphrase" required="true" placeholder="Passphrase">
+					<p>Are you sure you want to clear all your data? Remember this action is definitive, use with precaution!</p>
 					<span class="status"></span>
 					<div class="buttons">
 						<button type="submit">Clear</button>
@@ -355,7 +352,6 @@
 			</div>
 			<div class="middle padded-1">
 				<h1>Settings</h1>
-
 				<form method="post" data-form="settings" class="vertical align-center padded-2">
 					<div class="vertical align-center">
 						<h2>Notes Sorting Order</h2>
@@ -387,7 +383,6 @@
 						<div>
 							<button data-action="import-backup">Restore from Backup</button>
 							<button data-action="create-backup">Create Backup</button>
-
 						</div>
 					</div>
 

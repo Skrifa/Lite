@@ -7,56 +7,72 @@
 
 
 // Show the loading screen with a custom message
-function wait(message){
+function wait (message) {
 	$_('[data-view]').removeClass("active");
 	$_('[data-view="loading"] h2').text(message);
 	$_('[data-view="loading"]').addClass("active");
 }
 
 // Show a given view, it will hide all views and then show the given one.
-function show(view){
+function show (view) {
 	$_('[data-view]').removeClass("active");
-	$_('[data-view="' + view + '"]').addClass("active");
+	$_(`[data-view="${view}"]`).addClass("active");
 }
 
 // Get the title of a note
-function getTitle(html, suggested){
+function getTitle (html, suggested) {
 	var found = $(html).filter("h1").first().text().trim();
-	if(found){
+
+	// Check if a title was found
+	if (found) {
 		return found;
-	}else{
+	} else {
 		return suggested;
 	}
 }
 
 // Function to add a note to the notes container
-function addNote(noteID, noteTitle, noteColor){
+function addNote (noteID, noteTitle, noteColor) {
+
+	// Remove welcome screen in case it was still there
 	$_("[data-content='welcome']").hide();
+
+	// Add the note element
 	$_("[data-content='note-container']").append(`<article data-color='${noteColor}' draggable='true' data-nid='${noteID}'><div class='content' ><h2>${noteTitle}</h2></div><div class='note-actions'><span class='fa fa-eye' data-id='${noteID}' data-action='preview'></span><span class='fa-pencil fa' data-id='${noteID}' data-action='edit'></span><span class='fa-trash fa' data-id='${noteID}' data-action='delete'></span></div></article>`);
+
+	// Style the added note
 	styleNote(noteID);
 }
 
-// Function to set the background color of the notes, accepts the note id
-function styleNote(id){
-	if(typeof id == 'undefined'){
+// Function to set the background color and other style of the notes
+function styleNote (id) {
+
+	// Check if a note ID was given
+	if (typeof id == 'undefined') {
+
+		// Styling for Light and Dark themes
 		if ($_("body").hasClass("light") || $_("body").hasClass("dark")) {
-			$_(".grid article").each(function(element){
+			$_(".grid article").each(function(element) {
 				$_(element).style("background", $_(element).data("color"));
 			});
 		}
 
+		// Styling for Ghost theme
 		if ($_("body").hasClass("ghost")) {
-			$_(".grid article").each(function(element){
+			$_(".grid article").each(function(element) {
 				$_(element).style("border", "1px solid " + $_(element).data("color"));
 				$_(element).style("color", $_(element).data("color"));
 			});
 		}
 
-	}else{
+	} else {
+
+		// Styling for Light and Dark themes
 		if ($_("body").hasClass("light") || $_("body").hasClass("dark")) {
 			$_(`.grid [data-nid='${id}']`).style("background", $_(`.grid [data-nid='${id}']`).data("color"));
 		}
 
+		// Styling for Ghost theme
 		if ($_("body").hasClass("ghost")) {
 			$_(`.grid [data-nid='${id}']`).style("border", "1px solid " + $_(`.grid [data-nid='${id}']`).data("color"));
 			$_(`.grid [data-nid='${id}']`).style("color", $_(`.grid [data-nid='${id}']`).data("color"));
@@ -65,134 +81,129 @@ function styleNote(id){
 }
 
 // Load notes of the current notebook
-function loadNotes(){
-	// Check if the key is actually set
-	if(key != null){
-		// Remove previous content
-		$_("[data-content='note-container']").html("");
+function loadNotes () {
+	// Remove previous content
+	$_("[data-content='note-container']").html("");
 
-		// Remove welcome screen
-		$_("[data-content='welcome']").hide();
+	// Remove welcome screen
+	$_("[data-content='welcome']").hide();
 
-
-		db.transaction('r', db.note, function() {
-			var ht = "";
-			// Check if the notebook is empty
-			db.note.where("Notebook").equals(notebook).count(function(count){
-				if(count <= 0){
-					$_("[data-content='welcome']").show();
-				}
-			});
-			// Get all notes from the notebook
-
-			if(settings.sort == "newer"){
-				db.note.where("Notebook").equals(notebook).reverse().each(function(item, cursor){
-					var item = item;
-					addNote(item.id, item.Title, item.Color);
-				});
-			}else{
-				db.note.where("Notebook").equals(notebook).each(function(item, cursor){
-					var item = item;
-					addNote(item.id, item.Title, item.Color);
-				});
-
+	db.transaction('r', db.note, function() {
+		var ht = "";
+		// Check if the notebook is empty to show the welcome screen
+		db.note.where("Notebook").equals(notebook).count(function(count) {
+			if (count <= 0) {
+				$_("[data-content='welcome']").show();
 			}
-
-		}).then(function(){
-			show("notes");
 		});
-	}
+
+		// Check the ordering settings for the notes and get all the notes
+		if (settings.sort == "newer") {
+			db.note.where("Notebook").equals(notebook).reverse().each(function(item, cursor){
+				addNote(item.id, item.Title, item.Color);
+			});
+		} else {
+			db.note.where("Notebook").equals(notebook).each(function(item, cursor) {
+				addNote(item.id, item.Title, item.Color);
+			});
+		}
+
+	}).then(function() {
+		show("notes");
+	});
 }
 
 // Load notebook list
-function loadNotebooks(){
+function loadNotebooks() {
 	return new Promise((resolve, reject) => {
+		// Remove previous content
+		$_("[data-content='notebook-list']").html("");
 
-		if(key != null){
-			// Remove previous content
-			$_("[data-content='notebook-list']").html("");
+		// Add Inbox notebook by default
+		$_("[data-content='notebook-list']").append('<li data-notebook="Inbox">Inbox</li>');
 
-			// Add Inbox notebook
-			$_("[data-content='notebook-list']").append('<li data-notebook="Inbox">Inbox</li>');
+		// Temporary array to store the notebooks
+		var notebooksTemp = [];
 
-			// Temporary array to store the notebooks
-			var notebooksTemp = [];
-
-			// Get all notebooks
-			db.transaction('r', db.notebook, function() {
-				db.notebook.each(function(item, cursor){
-					notebooksTemp.push({
-						id: item.id,
-						Name: item.Name
-					});
+		// Get all notebooks
+		db.transaction('r', db.notebook, function() {
+			db.notebook.each(function(item, cursor) {
+				notebooksTemp.push({
+					id: item.id,
+					Name: item.Name
 				});
-			}).then(function(){
-				// Order notebooks alphabetically
-				notebooksTemp.sort(function(a, b){
-					var A = a.Name.toLowerCase();
-					var B = b.Name.toLowerCase();
-					if (A < B){
-						return -1;
-					}
-					if(A > B){
-						return 1;
-					}
-					return 0;
-				});
-				// Build the buttons
-				for(var i in notebooksTemp){
-					$_("[data-content='notebook-list']").append('<li data-notebook="' + notebooksTemp[i].id + '">' + notebooksTemp[i].Name + '</li>');
-				}
-				resolve();
 			});
-		}
+		}).then(function() {
+			// Order notebooks alphabetically
+			notebooksTemp.sort(function(a, b){
+				var A = a.Name.toLowerCase();
+				var B = b.Name.toLowerCase();
+				if (A < B){
+					return -1;
+				}
+				if(A > B){
+					return 1;
+				}
+				return 0;
+			});
+			// Build the notebook buttons for the side bar
+			for(var i in notebooksTemp) {
+				$_("[data-content='notebook-list']").append('<li data-notebook="' + notebooksTemp[i].id + '">' + notebooksTemp[i].Name + '</li>');
+			}
+			resolve();
+		});
 	});
 }
 
 // Load notebook list and notes
-function loadContent(){
+function loadContent () {
 	loadNotebooks().then(() => {
 		loadNotes();
 	});
 }
 
 // Get the currently selected text
-function getSelectionText() {
+function getSelectionText () {
     var text = "";
-    if(window.getSelection){
+    if (window.getSelection) {
         text = window.getSelection().toString();
-    }else if(document.selection && document.selection.type != "Control"){
+    } else if(document.selection && document.selection.type != "Control") {
         text = document.selection.createRange().text;
     }
     return text;
 }
 
 // Clean the HTML code generated by the Content Editable
-function cleanHTML(html){
+function cleanHTML (html) {
 	return html.replace(/(<\/span>|<span style=\"line-height: 1.5em;\">)/g, '').replace(/<div>/g, '<p>').replace(/<\/div>/g, '</p>\r\n').replace(/<p><br><\/p>/g, '').replace(/&nbsp;/g, ' ');
 }
 
-// Transform images to base64 encoding
-function toDataUrl(url, callback) {
-
+// Transform images to Base64 encoding, encoding it to Base64 will produce a
+// bigger size image which should be handled with care and it will also remove
+// any metadata from the file, improving privacy
+function toDataUrl (url, callback) {
+	wait("Loading Image");
 	var xhr = new XMLHttpRequest();
 	xhr.responseType = 'blob';
 	xhr.onload = function() {
 		var reader = new FileReader();
 		reader.onloadend = function() {
-			if(xhr.response.type == "image/png"){
+			// Check if the format is PNG so it can be compressed
+			if (xhr.response.type == "image/png") {
 				var image = nativeImage.createFromDataURL(reader.result);
+
+				// Compress image using the selected quality
 				image = image.resize({quality: settings.imageCompression});
 				show('editor');
 				callback(image.toDataURL());
-			}else{
+			} else {
 				show('editor');
 				callback(reader.result);
 			}
 		}
 		reader.readAsDataURL(xhr.response);
 	};
-	xhr.onerror = function(){
+	xhr.onerror = function() {
 		$_("span.insertImage-div").remove();
 		dialog.showErrorBox("Error loading your image", "There was an error loading your image, it was not inserted.");
 		show('editor');
@@ -201,19 +212,20 @@ function toDataUrl(url, callback) {
 	xhr.send();
 }
 
-$_ready(function(){
+$_ready(() => {
 
 	// Check if there are any updates available
-	if(navigator.onLine){
-		Request.json('https://skrifa.xyz/latest', {
-			onload: function(data){
-				if(data.response.version){
-					if(parseInt(data.response.version.replace(/\./g,"")) > parseInt(pkg.version.replace(/\./g,""))){
+	if (navigator.onLine) {
+		Request.json('https://skrifa.xyz/lite/latest', {
+			onload: function (data) {
+				if (data.response.version) {
+					// Compare version numbers
+					if (parseInt(data.response.version.replace(/\./g,"")) > parseInt(pkg.version.replace(/\./g,""))) {
 						$_("[data-action='update']").show();
 					}
 				}
 			},
-			onerror: function(error){
+			onerror: function (error) {
 				console.log(error);
 			}
 		});
@@ -228,7 +240,7 @@ $_ready(function(){
 		$_("[data-form='insert-snippet'] select").append("<option value='" + key + "'>"+ Text.capitalize(key) +"</option>");
 	}
 
-	// Change view settings
+	// Change view settings, currently saved for future uses
 	if(settings.view == "list"){
 		$_("[data-content='note-container']").removeClass("grid");
 		$_("[data-content='note-container']").addClass("list");
@@ -239,9 +251,11 @@ $_ready(function(){
 	// Set the theme for the application
 	$("body").removeClass();
 	$_("body").addClass(settings.theme);
+
+	// Set the value to the select options inside the settings screen according
+	// to the user saved settings
 	$_("[data-action='change-theme']").value(settings.theme);
 	$_("[data-action='change-sort']").value(settings.sort);
-
 	$_("[data-input='imageCompression']").value(settings.imageCompression);
 
 	// Listener for when the menu icon is clicked
@@ -252,5 +266,7 @@ $_ready(function(){
 			$("[data-view='" +$_(this).data("menu") + "'] .side-nav").addClass("active");
 		}
 	});
+
+	loadContent();
 
 });

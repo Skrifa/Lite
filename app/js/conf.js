@@ -25,6 +25,7 @@ const pkg = require('./package.json');
 const {clipboard} = require('electron');
 const app = require('electron').remote.app
 const htmlToText = require('html-to-text');
+const remote = require('electron').remote;
 
 // Required global variables for many functions
 var storage = localStorage;
@@ -48,9 +49,9 @@ var colors = [
 ];
 
 // Settings variables, some saved for the future
-if(Storage.get("settings")){
+if(Storage.get("settings")) {
 	var settings = JSON.parse(Storage.get("settings"));
-}else{
+} else {
 	var settings = {
 		autosave: false,
 		theme: "light",

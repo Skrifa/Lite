@@ -1,4 +1,4 @@
-$_ready(function(){
+$_ready(() => {
 
 	keyboardJS.bind('ctrl + s', function () {
 		if ($_("#editor").isVisible()) {
@@ -62,22 +62,23 @@ $_ready(function(){
 
 	keyboardJS.bind('ctrl + n', function () {
 		if ($_("[data-view='notes']").isVisible()) {
-			var date = new Date().toLocaleString();
-			var color = colors[Math.floor(Math.random()*colors.length)];
-			db.note.add({
-				Title: "New Note",
-				Content: '<h1>New Note</h1>',
-				CreationDate: date,
-				ModificationDate: date,
-				SyncDate: "",
-				Color: color,
-				Notebook: notebook
-			}).then(function(lastID){
-				addNote(lastID, "New Note", color);
-				show('notes');
-			});
+				var date = new Date().toLocaleString();
+				var color = colors[Math.floor(Math.random()*colors.length)];
+				db.note.add({
+					Title: "New Note",
+					Content:'<h1>New Note</h1>',
+					CreationDate: date,
+					ModificationDate: date,
+					SyncDate: "",
+					Color: color,
+					Notebook: notebook
+				}).then(function(lastID){
+					addNote(lastID, "New Note", color);
+					show('notes');
+				});
 		}
 	});
+
 	keyboardJS.watch();
 
 });

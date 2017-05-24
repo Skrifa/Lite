@@ -1,6 +1,6 @@
-$_ready(function(){
+$_ready(() => {
 
-	$("body").on("click", "[data-action]",function(){
+	$("[data-view='settings']").on("click", "[data-action]",function(){
 		switch ($_(this).data("action")) {
 
 			case "import-backup":
@@ -14,61 +14,97 @@ $_ready(function(){
 				},
 				function(file){
 					if(file){
-
+						wait("Reading File");
 						fs.readFile(file[0], 'utf8', function (error, data) {
-							if(error){
+							if (error) {
 
-							}else{
+							} else {
 								var backup = JSON.parse(data);
 								var extension = file[0].split(".").pop();
 
 								switch(extension){
 									case "skrup":
+										if (typeof backup.Version == 'undefined' && typeof backup.version != 'undefined') {
+											backup.Version = 3;
+										}
 
 										switch(backup.Version){
+											case 3:
+												wait("Clearing Storage");
+												db.transaction('rw', db.note, db.notebook, function() {
+													db.notebook.clear().then(function(deleteCount){
+														db.note.clear().then(function(deleteCount){
+															wait("Importing Notebooks and Notes From Backup");
+															for(var i in backup.notebooks){
+																if(backup.notebooks[i].id != "Inbox"){
+																	db.notebook.add({
+																		id: backup.notebooks[i].id,
+																		Name: backup.notebooks[i].Name,
+																		Description: backup.notebooks[i].Description
+																	});
+																}
+																for(var j in backup.notebooks[i].notes){
+																	db.note.add(backup.notebooks[i].notes[j]);
+																}
+															}
+														});
+													});
+												}).then(function(){
+													loadContent();
+												}).catch(function(){
+													dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
+													show('settings');
+												});
+												break;
 											case 2:
-
+												wait("Clearing Storage");
 												db.transaction('rw', db.note, db.notebook, function() {
 													db.notebook.clear();
 													db.note.clear();
 
 												}).then(function(){
-
+													wait("Importing Notebooks and Notes From Backup");
 
 													var notebooksTemp = [];
 													var notesTemp = [];
 
 													var notebooks = Object.keys(backup.Notebooks).map(function(k) { return backup.Notebooks[k] });
-													notebooks.map(function(notebook) {
+													var promises = notebooks.map(function(notebook) {
 														notebook.id = parseInt(notebook.id);
 														notebooksTemp.push(notebook);
 													});
 
-													var notes = Object.keys(backup.Notes).map(function(k) { return backup.Notes[k] });
-													notes.map(function(note) {
-														note.CreationDate = note.CDate;
-														note.ModificationDate = note.MDate;
-														delete note.CDate;
-														delete note.MDate;
-														note.Content = note.Content.replace(/<img class="lazy" src=/g, "<img data-original=").replace(/data\-url/g, "src");
-														notesTemp.push(note);
-													});
+													return Promise.all(promises).then(function() {
+														var notes = Object.keys(backup.Notes).map(function(k) { return backup.Notes[k] });
+														var promises2 = notes.map(function(note) {
+															note.CreationDate = note.CDate;
+															note.ModificationDate = note.MDate;
+															delete note.CDate;
+															delete note.MDate;
+															note.Content = note.Content.replace(/<img class="lazy" src=/g, "<img data-original=").replace(/data\-url/g, "src");
+															notesTemp.push(note);
+														});
 
+														return Promise.all(promises2).then(function() {
+															wait("Importing Notebooks and Notes From Backup");
 
-													db.transaction('rw', db.note, db.notebook, function() {
-														for(var i in notebooksTemp){
-															db.notebook.add(notebooksTemp[i]);
-														}
-														for(var j in notesTemp){
-															db.note.add(notesTemp[j]);
-														}
-													}).then(function(){
-														loadContent();
-													}).catch(function(error) {
+															db.transaction('rw', db.note, db.notebook, function() {
+																for(var i in notebooksTemp){
+																	db.notebook.add(notebooksTemp[i]);
+																}
+																for(var j in notesTemp){
+																	db.note.add(notesTemp[j]);
+																}
+															}).then(function(){
+																loadContent();
+															}).catch(function(error) {
 
-													    dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
-														show('settings');
+															    dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
+																show('settings');
 
+															});
+
+														});
 													});
 												}).catch(function(error) {
 
@@ -80,14 +116,15 @@ $_ready(function(){
 												break;
 
 											default:
+												wait("Clearing Storage");
 												db.transaction('rw', db.note, db.notebook, function() {
 													db.notebook.clear();
 													db.note.clear();
 												}).then(function(){
-
+													wait("Importing Notebooks and Notes From Backup");
 													var notesTemp = [];
 													var notes = Object.keys(backup).map(function(k) { return backup[k] });
-													notes.map(function(note) {
+													var promises = notes.map(function(note) {
 														note.Notebook = "Inbox";
 														note.CreationDate = note.CDate;
 														note.ModificationDate = note.MDate;
@@ -98,17 +135,19 @@ $_ready(function(){
 														notesTemp.push(note);
 													});
 
-													db.transaction('rw', db.note, function() {
-														for(var j in notesTemp){
-															db.note.add(notesTemp[j]);
-														}
-													}).then(function(){
-														loadContent();
-													}).catch(function(error) {
+													return Promise.all(promises).then(function() {
+														db.transaction('rw', db.note, function() {
+															for(var j in notesTemp){
+																db.note.add(notesTemp[j]);
+															}
+														}).then(function(){
+															loadContent();
+														}).catch(function(error) {
 
-														dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
-														show('settings');
+															dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
+															show('settings');
 
+														});
 													});
 												}).catch(function(error){
 													dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
@@ -127,9 +166,9 @@ $_ready(function(){
 				break;
 
 			case "create-backup":
-
+				wait("Building Backup");
 				var json = {
-					version: 1,
+					version: 3,
 					notebooks: {
 
 					}
@@ -180,11 +219,11 @@ $_ready(function(){
 						dialog.showSaveDialog({
 							title: "Choose Directory to Save Backup",
 							buttonLabel: "Choose",
-							defaultPath: `Skrifa Backup ${date}.skb`
+							defaultPath: `Skrifa Lite Backup ${date}.skrup`
 						},
 						function(directory){
 							if(directory){
-
+								wait("Writing Backup to File");
 								fs.writeFile(directory, JSON.stringify(json), 'utf8', function (error) {
 									if(error){
 										dialog.showErrorBox("Error creating backup", "There was an error creating your backup, file was not created.");
@@ -193,7 +232,7 @@ $_ready(function(){
 									}
 								});
 							}else{
-								show("notes");
+								show("settings");
 							}
 						});
 					});
@@ -201,33 +240,9 @@ $_ready(function(){
 				});
 				break;
 
-			case "export-public-key":
-				dialog.showSaveDialog(
-					{
-						title: "Choose Directory to Save your Key",
-						buttonLabel: "Save",
-						defaultPath: Storage.get("User")+ '-public-key.asc'
-					},
-					function(directory){
-						if(directory){
-
-							fs.writeFile(directory, Storage.get("PubKey"), 'utf8', function (error) {
-								if(error){
-									dialog.showErrorBox("Error saving your key", "There was an error saving your key, file was not created.");
-								}else{
-								}
-							});
-
-						}
-					});
-				break;
-			case "migrate-backup":
-				$_("[data-modal='migrate-backup']").addClass('active');
-				break;
 			case "clear-data":
 				$_("[data-modal='clear-data']").addClass('active');
 				break;
-
 		}
 
 	});
@@ -251,7 +266,7 @@ $_ready(function(){
 		$_("body").addClass($_("[data-action='change-theme'] :checked").value());
 		settings.theme = $_("[data-action='change-theme'] :checked").value();
 		Storage.set("settings", JSON.stringify(settings));
-		styleNote();
+		loadNotes();
 	});
 
 	$_("[data-action='change-sort']").change(function(){
@@ -260,23 +275,25 @@ $_ready(function(){
 		loadNotes();
 	});
 
-	$_("[data-form='migrate-backup'] [type='reset']").click(function(){
-		$_("[data-modal='migrate-backup']").removeClass('active');
-	});
-
 	$_("[data-form='clear-data'] [type='reset']").click(function(){
 		$_("[data-modal='clear-data']").removeClass('active');
+		$_("[data-modal='clear-data'] span").text("");
 	});
-
 
 	$_("[data-form='clear-data']").submit(function(event){
 		event.preventDefault();
-
+		var self = this;
+		wait("Clearing Storage");
 		db.transaction('rw', db.note, db.notebook, function() {
 			db.notebook.clear();
 			db.note.clear();
 			Storage.clear();
+			self.reset();
 		}).then(function(){
+			$_("[data-content='note-container']").html("");
+			$_("[data-content='notebook-list']").html("");
+			$_("[data-modal='clear-data']").removeClass('active');
+			$_("[data-modal='clear-data'] span").text("");
 			show("notes");
 		});
 	});
