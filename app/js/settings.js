@@ -294,6 +294,7 @@ $_ready(() => {
 			$_("[data-content='notebook-list']").html("");
 			$_("[data-modal='clear-data']").removeClass('active');
 			$_("[data-modal='clear-data'] span").text("");
+			loadContent();
 			show("notes");
 		});
 	});
