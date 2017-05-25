@@ -183,14 +183,18 @@ $_ready(() => {
 
 									case "skrifa":
 										var json = JSON.parse(data);
-										if(json.Title && json.Content && json.CDate && json.MDate && json.Color){
+										if(json.Title && json.Content && json.Color){
+											if (json.CDate && json.MDate) {
+												json.CreationDate = json.CDate;
+												json.ModificationDate = json.MDate;
+											}
 
 											var date = new Date().toLocaleString();
 
 											db.note.add({
 												Title: json.Title,
 												Content: json.Content,
-												CreationDate: json.CDate,
+												CreationDate: json.CreationDate,
 												ModificationDate: date,
 												SyncDate: '',
 												Color: json.Color,
