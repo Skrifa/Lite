@@ -50,6 +50,12 @@ $_ready(() => {
 														});
 													});
 												}).then(function(){
+													// Change view to the Inbox notebook
+													notebook = "Inbox";
+													$_(".logo h1").text("Inbox");
+													$_(".logo small").text("A place for any note");
+													$_("[data-action='edit-notebook']").hide();
+													$_("[data-action='delete-notebook']").hide();
 													loadContent();
 												}).catch(function(){
 													dialog.showErrorBox("Error restoring from backup", "There was an error restoring your notes, none where imported.");
@@ -96,6 +102,12 @@ $_ready(() => {
 																	db.note.add(notesTemp[j]);
 																}
 															}).then(function(){
+																// Change view to the Inbox notebook
+																notebook = "Inbox";
+																$_(".logo h1").text("Inbox");
+																$_(".logo small").text("A place for any note");
+																$_("[data-action='edit-notebook']").hide();
+																$_("[data-action='delete-notebook']").hide();
 																loadContent();
 															}).catch(function(error) {
 
@@ -141,6 +153,12 @@ $_ready(() => {
 																db.note.add(notesTemp[j]);
 															}
 														}).then(function(){
+															// Change view to the Inbox notebook
+															notebook = "Inbox";
+															$_(".logo h1").text("Inbox");
+															$_(".logo small").text("A place for any note");
+															$_("[data-action='edit-notebook']").hide();
+															$_("[data-action='delete-notebook']").hide();
 															loadContent();
 														}).catch(function(error) {
 
@@ -214,29 +232,29 @@ $_ready(() => {
 								Notebook: item2.Notebook,
 							});
 						});
-					}).then(function(){
-						var date = new Date().toLocaleDateString().replace(/\//g, "-");
-						dialog.showSaveDialog({
-							title: "Choose Directory to Save Backup",
-							buttonLabel: "Choose",
-							defaultPath: `Skrifa Lite Backup ${date}.skrup`
-						},
-						function(directory){
-							if(directory){
-								wait("Writing Backup to File");
-								fs.writeFile(directory, JSON.stringify(json), 'utf8', function (error) {
-									if(error){
-										dialog.showErrorBox("Error creating backup", "There was an error creating your backup, file was not created.");
-									}else{
-										show("notes");
-									}
-								});
-							}else{
-								show("settings");
-							}
-						});
 					});
 
+				}).then(function(){
+					var date = new Date().toLocaleDateString().replace(/\//g, "-");
+					dialog.showSaveDialog({
+						title: "Choose Directory to Save Backup",
+						buttonLabel: "Choose",
+						defaultPath: `Skrifa Lite Backup ${date}.skrup`
+					},
+					function(directory){
+						if(directory){
+							wait("Writing Backup to File");
+							fs.writeFile(directory, JSON.stringify(json), 'utf8', function (error) {
+								if(error){
+									dialog.showErrorBox("Error creating backup", "There was an error creating your backup, file was not created.");
+								}else{
+									show("notes");
+								}
+							});
+						}else{
+							show("settings");
+						}
+					});
 				});
 				break;
 
