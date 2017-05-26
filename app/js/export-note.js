@@ -32,15 +32,10 @@ $_ready(function(){
 		wait("Exporting Note to File");
 		db.note.where("id").equals(parseInt(id)).first(function(note){
 			// Add attributes that are compatible with the Chrome version
-			// TODO: Remove this ones once the Chrome version is updated
-			note.MDate = note.ModificationDate;
-			note.CDate = note.CreationDate;
 
 			// Remove unnecessary metadata
 			delete note.Notebook;
 			delete note.SyncDate;
-			delete note.CreationDate;
-			delete note.ModificationDate;
 			delete note.id;
 
 			// Get note Title from the DOM to speed up the process
