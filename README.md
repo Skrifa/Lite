@@ -1,6 +1,6 @@
 # Skrifa Lite
 
-A note taking app focused on simplicity.
+A note taking app focused on simplicity. Skrifa Lite ships with all the functionality of the Skrifa app but strips away the encryption features, providing a blazing fast experience for those who are not interested on encrypting their notes or need a lighter option for a low-spec hardware.
 
 From school to your office, Skrifa is the word processor for everyone.
 
@@ -9,7 +9,8 @@ With a minimal, distraction free, simple and yet powerful interface, it's focuse
 From text styling to videos and images, and there are also features for more specific things like **writing code, math and data tables**
 
 ### Writing Math
-Having a suitable notebook for any ocation is something we all need, Skrifa has Mathjax capabilities so that you can write math formulas and some LaTEX code, ideal for students and people who work with math!
+Having a suitable notebook for any ocation is something we all need, Skrifa has Mathjax capabilities so that you can write math formulas and some LaTEX code, ideal for students and people who work with math! Doing it is as simple as just typing your formula like this:
+$x + y = z$
 
 ### Writing Code
 Thanks to Prism.js Skrifa also has code highlightning for you!
