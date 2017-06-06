@@ -6,22 +6,41 @@ function saveNote(){
 	db.transaction('rw', db.note, function(){
 		// Get note title
 		var h1 = $_("#editor h1").first();
-		h1 = h1 != "" && typeof h1 != 'undefined' ? h1.text().trim() : "Untitled";
+		if (typeof h1 != 'undefined') {
+			if (h1.collection.length > 0) {
+				var text = h1.text().trim();
+				if (text != ""){
+					h1 = text;
+				} else {
+					h1 = "Untitled";
+				}
+			} else {
+				h1 = "Untitled";
+			}
+		} else {
+			h1 = "Untitled";
+		}
+
 		// Change title in the note container
 		$_("[data-nid='" + id + "'] h2").text(h1);
 		if(html && h1 && date){
+			// Update the note
 			db.note.where("id").equals(parseInt(id)).modify({
 				Content: html,
 				Title: h1,
 				ModificationDate: date
+			}).then(function(){
+				// Set the unsaved state to false
+				unsaved = false;
+				$_("[data-action='save']").removeClass('unsaved');
+				// Show the editor again
+				show("editor");
 			});
+		} else {
+			dialog.showErrorBox("Error saving", "There was an error saving your note, please try again.");
+			unsaved = true;
+			show("editor");
 		}
-	}).then(function(){
-		// Set the unsaved state to false
-		unsaved = false;
-		$_("[data-action='save']").removeClass('unsaved');
-		// Show the editor again
-		show("editor");
 	}).catch(function(){
 		dialog.showErrorBox("Error saving", "There was an error saving your note, please try again.");
 		unsaved = true;
